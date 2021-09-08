@@ -1,0 +1,475 @@
+#include <iostream>
+#include <fstream>
+#include <windows.h>
+#include <cstdlib>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+using namespace std;
+
+struct Adresat
+{
+    string imie, nazwisko, nrTel, email, adres;
+    int idAdresata = 0;
+};
+
+string konwertujIntNaString(int NrID)
+{
+    ostringstream ss;
+    ss << NrID;
+    string str = ss.str();
+
+    return str;
+}
+
+std::vector <Adresat> adresaci;
+
+void dodajOsobeDoKsiazki (vector <Adresat> &adresaci)
+{
+
+    Adresat pomoc;
+
+    string imie = " ", nazwisko = " ", nrTel = " ", email = " ", adres = " ";
+    int idAdresata;
+
+    if(adresaci.size() == 0)
+        idAdresata = 1;
+    else
+        idAdresata = adresaci[adresaci.size() - 1].idAdresata + 1;
+
+    std::string s = std::to_string(idAdresata);
+
+    cout << "Podaj imie: ";
+    cin >> imie;
+    cin.sync();
+    cout << "Podaj nazwisko: ";
+    cin >> nazwisko;
+    cin.sync();
+    cout << "Podaj nr telefonu: ";
+    cin >> nrTel;
+    cin.sync();
+    cout << "Podaj email: ";
+    cin >> email;
+    cin.sync();
+    cout << "Podaj swoj adres: ";
+    getline(cin, adres);
+
+    pomoc.idAdresata = idAdresata;
+    pomoc.imie = imie;
+    pomoc.nazwisko = nazwisko;
+    pomoc.nrTel = nrTel;
+    pomoc.email = email;
+    pomoc.adres = adres;
+
+    //dodaj osobe do wektora
+    adresaci.push_back(pomoc);
+
+    //zapisz do pliku
+    fstream plikDoZapisu;
+    plikDoZapisu.open("ksiazkaZAdresami.txt", ios::out | ios::app);
+
+    if (plikDoZapisu.good() == true)
+        {
+            plikDoZapisu << pomoc.idAdresata << "|" << pomoc.imie << "|" << pomoc.nazwisko << "|" << pomoc.nrTel << "|" << pomoc.email << "|" << pomoc.adres << "|" << endl;
+            plikDoZapisu.close();
+        }
+    else
+        {
+            cout << "Nie udalo sie otworzyc pliku";
+            system("pause");
+        }
+    cout << "Osoba zostala dodana do ksiazki adresowej" << endl;
+    system("pause");
+
+}
+
+vector <Adresat> rozdzielDaneAdresatowNaPojedynczeDane (vector <Adresat> &adresaci, string liniaDoOdczytania, char znakPionowejKreski)
+{
+    Adresat adresat;
+    int nrLinii = 1;
+    stringstream ss(liniaDoOdczytania);
+    string pojedynczaDana = " ";
+
+    while (getline(ss, pojedynczaDana, znakPionowejKreski))
+        {
+            switch (nrLinii)
+                {
+                case 1:
+                    adresat.idAdresata = (atoi(pojedynczaDana.c_str()));
+                    break;
+                case 2:
+                    adresat.imie = pojedynczaDana;
+                    break;
+                case 3:
+                    adresat.nazwisko = pojedynczaDana;
+                    break;
+                case 4:
+                    adresat.nrTel = pojedynczaDana;
+                    break;
+                case 5:
+                    adresat.email = pojedynczaDana;
+                    break;
+                case 6:
+                    adresat.adres = pojedynczaDana;
+                    break;
+
+                }
+            nrLinii++;
+        }
+    adresaci.push_back(adresat);
+
+    return adresaci;
+}
+
+int wczytajPlikZDanymiAdresatow (vector <Adresat> &adresaci)
+{
+
+    int idAdresata = 0;
+    vector <string> pojedynczyKontakt;
+    string liniaTekstu;
+    int nrLinii = 1;
+    int iloscOsob = 0;
+    fstream plikDoOdczytu;
+    string ostatniaOsobaWPliku = " ";
+
+    plikDoOdczytu.open("ksiazkaZAdresami.txt", ios::in);
+
+    if (plikDoOdczytu.good() == true)
+        {
+            while (getline(plikDoOdczytu, liniaTekstu))
+                {
+                    adresaci = rozdzielDaneAdresatowNaPojedynczeDane(adresaci, liniaTekstu, '|');
+                }
+
+        }
+    plikDoOdczytu.close();
+
+}
+
+void wyszukajOsobePoImieniu ()
+{
+    string imie;
+    cout << "Podaj imie, ktore chcesz wyszukac: ";
+    cin.sync();
+    cin >> imie;
+    cin.sync();
+    int iloscOsob = 0;
+    vector <Adresat>::iterator itr = adresaci.begin();
+    for (itr; itr != adresaci.end(); itr++)
+        {
+            if(itr->imie == imie)
+                {
+                    cout << "Znalazlem osobe o takim imieniu" << endl;
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres;
+                    iloscOsob++;
+                    Sleep(1500);
+                }
+        }
+    if (iloscOsob == 0)
+        {
+            cout << "Nie ma takiej osoby!" << endl;
+            Sleep(1500);
+            iloscOsob++;
+        }
+}
+
+void wyszukajOsobePoNazwisku ()
+{
+    string nazwisko;
+    cout << "Podaj nazwisko, ktore chcesz wyszukac: ";
+    cin.sync();
+    cin >> nazwisko;
+    cin.sync();
+    int iloscOsob = 0;
+    vector <Adresat>::iterator itr = adresaci.begin();
+    for (itr; itr != adresaci.end(); itr++)
+        {
+            if(itr->nazwisko == nazwisko)
+                {
+                    cout << "Znalazlem osobe o takim nazwisku" << endl;
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres;
+                    iloscOsob++;
+                    Sleep(1500);
+                }
+        }
+    if (iloscOsob == 0)
+        {
+            cout << "Nie ma takiej osoby!" << endl;
+            Sleep(1500);
+            iloscOsob++;
+        }
+}
+
+void wyswietlWszystkieKontakty ()
+{
+    vector <Adresat>::iterator itr = adresaci.begin();
+
+    for (itr; itr != adresaci.end(); itr++)
+        {
+            cout << "ID: " << itr->idAdresata << endl;
+            cout << "Imie: " << itr->imie << endl;
+            cout << "Nazwisko: " << itr->nazwisko << endl;
+            cout << "Nr tel: " << itr->nrTel << endl;
+            cout << "Adres email: " << itr->email << endl;
+            cout << "Adres zamieszkania: " << itr->adres << endl;
+            Sleep(2000);
+        }
+
+}
+
+void zapiszPoUsunieciu (vector <Adresat> adresaci)
+{
+    vector <Adresat> ::iterator itr = adresaci.begin();
+    fstream plikPoUsunieciuOsoby;
+    plikPoUsunieciuOsoby.open("KsiazkaZAdresami.txt", ios::out | ios::trunc);
+    if (plikPoUsunieciuOsoby.good())  //plik poprawny
+        {
+            for (itr; itr != adresaci.end(); itr++)
+                {
+                    plikPoUsunieciuOsoby << itr->idAdresata << "|" << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+
+                }
+            plikPoUsunieciuOsoby.close();
+        }
+    adresaci.clear();
+
+}
+
+void aktualizujPlikPoEdycji (vector <Adresat> adresaci)
+{
+    vector <Adresat> ::iterator itr = adresaci.begin();
+    fstream plikPoEdycjiDanych;
+    plikPoEdycjiDanych.open("KsiazkaZAdresami.txt", ios::out | ios::trunc);
+    if (plikPoEdycjiDanych.good())  //plik poprawny
+        {
+            for (itr; itr != adresaci.end(); itr++)
+                {
+                    plikPoEdycjiDanych << itr->idAdresata << "|" << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+
+                }
+            plikPoEdycjiDanych.close();
+        }
+    adresaci.clear();
+
+}
+
+void usunAdresata ()
+{
+    int idUsuwanejOsoby;
+    char potwierdzenieWyboru;
+    cout << "Podaj id adresata, ktorego chcesz usunac: ";
+    cin.sync();
+    cin >> idUsuwanejOsoby;
+    cin.sync();
+    vector <Adresat> ::iterator itr = adresaci.begin();
+    for (itr; itr != adresaci.end(); ++itr)
+        {
+            if (itr->idAdresata == idUsuwanejOsoby)
+                {
+                    cout << itr->idAdresata << "|" << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+                    Sleep(1000);
+                    cout << "Czy na pewno chcesz usunac tego adresata? Kliknij t: " << endl;
+                    cin >> potwierdzenieWyboru;
+                    if (potwierdzenieWyboru == 't')
+                        {
+                            adresaci.erase(itr);
+                            //break;
+                            cout << "Kontakt zostal usuniety";
+                            Sleep(1500);
+
+                            //zapisac zmiany do pliku
+                           zapiszPoUsunieciu(adresaci);
+                        }
+                    else if (potwierdzenieWyboru != 't')
+                        {
+                        cout << "Blad! Wcisnales zly klawisz!";
+                    }
+                     break;
+
+                }
+
+        }
+
+}
+
+void edytujOsobe () {
+    vector <Adresat> ::iterator itr = adresaci.begin();
+    int iloscOsob = 0;
+    string noweImie, noweNazwisko, nowyNrTel, nowyEmail, nowyAdres;
+    int idOsoby = 0;
+    int wyborDanej;
+    bool czyIstniejeUzytkownik = false;
+
+    cout << "Podaj id uzytkownika, ktorego dane maja byc edytowane: ";
+    cin >> idOsoby;
+    cin.sync();
+
+    for (itr; itr != adresaci.end(); itr++)
+    {
+       if (itr->idAdresata == idOsoby)
+        {
+           // czyIstniejeUzytkownik  =true;
+            cout << "Ktora dana chcesz zmienic: 1 - imie, 2 - nazwisko, 3 - nrTel, 4 - email, 5 - adres" << endl;
+            cout << "Kliknij odpowiednia cyfre" << endl;
+            Sleep (1500);
+            cin >> wyborDanej;
+
+            switch (wyborDanej)
+            {
+            case 1:
+                {
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+                    cout << "Podaj nowe imie: ";
+                    cin >> noweImie;
+                    itr->imie = noweImie;
+                    aktualizujPlikPoEdycji(adresaci);
+                    iloscOsob++;
+                    cout << "Dane zostaly zmienione.";
+                    Sleep(1500);
+                    break;
+                }
+
+             case 2:
+                {
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+                    cout << "Podaj nowe nazwisko: ";
+                    cin >> noweNazwisko;
+                    itr->nazwisko = noweNazwisko;
+                    aktualizujPlikPoEdycji(adresaci);
+                    iloscOsob++;
+                    cout << "Dane zostaly zmienione.";
+                    Sleep(1500);
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+                    cout << "Podaj nowy nr telefonu: ";
+                    cin >> nowyNrTel;
+                    itr->nrTel = nowyNrTel;
+                    aktualizujPlikPoEdycji(adresaci);
+                    iloscOsob++;
+                    cout << "Dane zostaly zmienione.";
+                    Sleep(1500);
+                    break;
+                }
+
+                case 4:
+                {
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+                    cout << "Podaj nowy email : ";
+                    cin >> nowyEmail;
+                    itr->email = nowyEmail;
+                    aktualizujPlikPoEdycji(adresaci);
+                    cout << "Dane zostaly zmienione.";
+                    iloscOsob++;
+                    Sleep(1500);
+                    break;
+                }
+
+                case 5:
+                {
+                    cout << itr->imie << "|" << itr->nazwisko << "|" << itr->nrTel << "|" << itr->email << "|" << itr->adres << endl;
+                    cout << "Podaj nowy adres: ";
+                    cin >> nowyAdres;
+                    itr->adres = nowyAdres;
+                    aktualizujPlikPoEdycji(adresaci);
+                    iloscOsob++;
+                    cout << "Dane zostaly zmienione.";
+                    Sleep(1500);
+                    break;
+                }
+
+                default:
+                cout << "Kliknales zly numer!";
+                iloscOsob++;
+                Sleep(1500);
+            }
+        }
+    }
+    if ((iloscOsob == 0) || (czyIstniejeUzytkownik = false))
+    {
+        iloscOsob++;
+        cout << "Nie ma takiego ID!";
+        Sleep (1500);
+    }
+
+}
+
+int main()
+{
+    int liczbaZapisanychOsob = 0;
+    char twojWybor;
+
+    char wyborWMenu;
+    char checStworzeniaPliku;
+    int iloscOsob = 0;
+
+    //tworzenie pliku
+    ifstream plik;
+    plik.open("KsiazkaZAdresami.txt");
+    if (plik)   //sprawdzam czy plik istnieje
+        {
+            cout << "Plik istnieje";
+        }
+    else     //jesli nie istnieeje, stwarzam nowy
+        {
+            cout << "Plik nie istnieje, jesli chccesz stworzyc nowy plik, klinkij n" << endl;
+            cin >> checStworzeniaPliku;
+
+            string nowyPlik;
+            nowyPlik = "KsiazkaZAdresami.txt";
+            ofstream plikDoStworzenia(nowyPlik.c_str());
+        }
+
+    liczbaZapisanychOsob = wczytajPlikZDanymiAdresatow (adresaci);
+
+    while (1)
+        {
+            system("cls");
+            cout << "Witaj w ksiazce adresowej!" << endl;
+            cout << "Wybierz opcje: " << endl;
+            cout << "1. Dodaj adresata" << endl;
+            cout << "2. Wyszukuj po imieniu" << endl;
+            cout << "3  Wyszukuj po nazwisku" << endl;
+            cout << "4. Wyswietl wszystkich adresatow" << endl;
+            cout << "5. Usun adresata" << endl;
+            cout << "6. Edytuj adresata" << endl;
+            cout << "9. Zakoncz program" << endl;
+
+            cin >> twojWybor;
+
+            if (twojWybor == '1')
+                {
+                    dodajOsobeDoKsiazki(adresaci);
+                }
+            else if (twojWybor == '2')
+                {
+                    wyszukajOsobePoImieniu();
+                }
+            else if (twojWybor == '3')
+                {
+                    wyszukajOsobePoNazwisku();
+                }
+            else if (twojWybor == '4')
+                {
+                    wyswietlWszystkieKontakty();
+                }
+            else if (twojWybor == '5')
+                {
+                    usunAdresata();
+                }
+            else if (twojWybor == '6')
+                {
+                    edytujOsobe();
+                }
+            else if (twojWybor == '9')
+                {
+                    exit(0);
+                }
+        }
+    return 0;
+}
